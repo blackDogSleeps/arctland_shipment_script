@@ -1,11 +1,6 @@
 import os
-import shutil
 from openpyxl import load_workbook, Workbook
 from labels import make_labels
-
-
-WB_BARCODES_FILENAME = 'shk_excel_NEW.xlsx'
-SHIPMENT_FILENAME = 'Поставка_NEW.xlsx'
 
 
 def new_book():
@@ -26,7 +21,7 @@ def new_book():
             'sheet': work_sheet}
 
 
-def shipment_book(shipment_total):
+def shipment_book(shipment_total, shipment_filename):
     shipment = Workbook()
     work_sheet = shipment.active
     work_sheet.title = 'Sheet1'
@@ -49,10 +44,11 @@ def shipment_book(shipment_total):
                         value=amount)
         row_count += 1
 
-    shipment.save(SHIPMENT_FILENAME)
+    shipment.save('output_new' + '\\' + shipment_filename)
 
 
-def iterate_boxes(boxes, wb_array, dictionary):
+def iterate_boxes(boxes, wb_array, dictionary,
+                  wb_barcodes_filename, shipment_filename):
     book_and_sheet = new_book()
     shk_excel = book_and_sheet.get('book')
     work_sheet = book_and_sheet.get('sheet')
@@ -89,8 +85,8 @@ def iterate_boxes(boxes, wb_array, dictionary):
         else:
             shipment_total.update({barcode: amount})
 
-    shipment_book(shipment_total)
-    shk_excel.save(WB_BARCODES_FILENAME)
+    shipment_book(shipment_total, shipment_filename)
+    shk_excel.save('output_new' + '\\' + wb_barcodes_filename)
 
 
 def iterate_wb_boxes(wb_boxes):
@@ -107,13 +103,15 @@ def iterate_wb_boxes(wb_boxes):
     return wb_array
 
 
-def excel(dictionary, plan_file, wb_boxes_file):
+def excel(dictionary, plan_file, wb_boxes_file,
+          wb_barcodes_filename, shipment_filename):
     plan = load_workbook(filename=plan_file)
     wb_boxes = load_workbook(filename=wb_boxes_file).active
     
     boxes = plan['КОРОБА']
     wb_array = iterate_wb_boxes(wb_boxes)
-    iterate_boxes(boxes, wb_array, dictionary)
+    iterate_boxes(boxes, wb_array, dictionary,
+                  wb_barcodes_filename, shipment_filename)
 
   
 def bar_codes(barcodes_file):
@@ -166,20 +164,12 @@ def get_files():
             'barcodes': barcodes_file} 
 
 
-def create_output(directory):
-    output = 'output_new' 
-    if output not in directory:
-        os.mkdir(output)
-    
-    path = os.getcwd() 
-    shutil.move(path + '\\' + WB_BARCODES_FILENAME,
-                path + '\\' + output)
-    shutil.move(path + '\\' + SHIPMENT_FILENAME,
-                path + '\\' + output)
-
-
 def main():
+    shipment_date = make_labels()
     files = get_files()
+    
+    wb_barcodes_filename = 'shk_excel-' + shipment_date + '.xlsx'
+    shipment_filename = 'Поставка ' + shipment_date + '.xlsx'
     
     plan_file = files.get('plan')
     wb_boxes_file = files.get('wb')
@@ -190,11 +180,12 @@ def main():
         barcodes_file is not None):
 
         dictionary = bar_codes(barcodes_file)
-        excel(dictionary, plan_file, wb_boxes_file)
+        excel(dictionary, plan_file,
+              wb_boxes_file, wb_barcodes_filename,
+              shipment_filename)
 
-    create_output(os.listdir())
-    make_labels()
-    
+    input('Всё готово и сложено в папку "output_new"')
+
 
 if __name__ == '__main__':
     main()

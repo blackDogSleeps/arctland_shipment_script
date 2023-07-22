@@ -76,9 +76,19 @@ def get_inputs():
         pallets_amount)
 
 
+def create_output(document, shipment_date):
+    output = 'output_new' 
+    if output not in os.listdir():
+        os.mkdir(output)
+    
+    document.save('output_new' + '\\' + 'Маркировка ПА ' + 
+                  shipment_date + '.docx')
+
+
 def make_labels():
     inputs = get_inputs()
     dictionary = inputs[0]
+    shipment_date = dictionary.get('Дата поставки')
     pallets_amount = inputs[1]
     document = new_document()
     pallet_index = 1
@@ -90,12 +100,8 @@ def make_labels():
         if i < pallets_amount - 1:
             document.add_page_break()
     
-    output = 'output_new' 
-    if output not in os.listdir():
-        os.mkdir(output)
-
-    document.save('output_new' + '\\' + 'Маркировка ПА NEW.docx')
-    input('Всё готово и сложено в папку "output_new"')
+    create_output(document, shipment_date)
+    return shipment_date
 
 
 def main():
