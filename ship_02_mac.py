@@ -1,6 +1,6 @@
 import os, sys, re
 from openpyxl import load_workbook, Workbook
-from labels import make_labels
+from labels_mac import make_labels
 
 
 def new_book():
